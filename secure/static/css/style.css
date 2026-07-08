@@ -1,0 +1,279 @@
+/* ===== 全局 Reset ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f2f5;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* ===== 导航栏 ===== */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-brand {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.navbar-menu {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.navbar-menu a,
+.navbar-menu span {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.navbar-menu a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.navbar-welcome {
+    font-weight: 500;
+}
+
+.navbar-link {
+    padding: 4px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.navbar-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    text-decoration: none !important;
+}
+
+/* ===== 主容器 ===== */
+.container {
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 0 16px;
+}
+
+/* ===== 卡片 ===== */
+.card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-align: center;
+    color: #333;
+}
+
+/* ===== 表单 ===== */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #555;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* ===== 按钮 ===== */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: #fff;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.btn-primary:hover {
+    background: #5a6fd6;
+}
+
+.btn-danger {
+    background: #ff4d4f;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #e04345;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #667eea;
+    border: 1px solid #667eea;
+}
+
+.btn-outline:hover {
+    background: #f0f2ff;
+}
+
+/* ===== 错误提示 ===== */
+.alert-error {
+    background: #fff2f0;
+    border: 1px solid #ffccc7;
+    color: #cf1322;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+/* ===== 用户信息列表 ===== */
+.user-info-list {
+    list-style: none;
+    margin: 20px 0;
+}
+
+.user-info-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.user-info-list li:last-child {
+    border-bottom: none;
+}
+
+.user-info-label {
+    color: #888;
+    font-weight: 500;
+}
+
+.user-info-value {
+    color: #333;
+    font-weight: 400;
+}
+
+/* ===== 欢迎文字 ===== */
+.welcome-text {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+/* ===== 未登录提示 ===== */
+.guest-section {
+    text-align: center;
+}
+
+.guest-section p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* ===== 按钮组 ===== */
+.btn-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* ===== 搜索表格 ===== */
+.search-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.search-table th {
+    background: #f5f5f5;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    text-align: left;
+    font-weight: 600;
+}
+
+.search-table td {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+}
+
+.search-table tr:hover {
+    background: #f8f9ff;
+}
+
+/* ===== 搜索区域 ===== */
+.search-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.search-title {
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+.no-result {
+    color: #999;
+    font-size: 14px;
+    text-align: center;
+    padding: 16px;
+}
+
+/* ===== 注册链接 ===== */
+.register-link {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.register-link a {
+    color: #667eea;
+    font-size: 14px;
+}

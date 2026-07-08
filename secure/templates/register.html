@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">用户注册</h2>
+
+    {% if error %}
+    <div class="alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/register">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            <label for="username">用户名</label>
+            {{ form.username(class="form-input", placeholder="请输入用户名") }}
+        </div>
+
+        <div class="form-group">
+            <label for="password">密码</label>
+            {{ form.password(class="form-input", placeholder="请输入密码") }}
+        </div>
+
+        <div class="form-group">
+            <label for="email">邮箱</label>
+            <input type="email" id="email" name="email" class="form-input" placeholder="请输入邮箱">
+        </div>
+
+        <div class="form-group">
+            <label for="phone">手机号</label>
+            <input type="text" id="phone" name="phone" class="form-input" placeholder="请输入手机号">
+        </div>
+
+        <button type="submit" class="btn btn-primary">注 册</button>
+    </form>
+
+    <div class="register-link">
+        <a href="/login">已有账号？去登录</a>
+    </div>
+</div>
+{% endblock %}

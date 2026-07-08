@@ -22,12 +22,21 @@ user-management/
 │   │   └── index.html                ← 页面展示明文密码
 │   └── static/css/style.css
 │
-└── patched/                           ← 安全加固版（漏洞已修复）
-    ├── app.py                        ← 全部漏洞修复后的代码
+├── patched/                           ← 安全加固版（漏洞已修复）
+│   ├── app.py                        ← 全部漏洞修复后的代码
+│   ├── templates/
+│   │   ├── base.html
+│   │   ├── login.html                ← 移除调试注释，添加 CSRF 保护
+│   │   └── index.html                ← 移除密码显示
+│   └── static/css/style.css
+│
+└── secure/                            ← SQL注入修复版（全新项目）
+    ├── app.py                        ← 全部使用参数化查询，消除SQL注入
     ├── templates/
     │   ├── base.html
-    │   ├── login.html                ← 移除调试注释，添加 CSRF 保护
-    │   └── index.html                ← 移除密码显示
+    │   ├── login.html                ← WTForms + CSRF 保护
+    │   ├── register.html             ← 含注册功能
+    │   └── index.html                ← 含参数化搜索
     └── static/css/style.css
 ```
 
@@ -55,6 +64,14 @@ user-management/
 | V-008 | Debug 模式开启 | 中危 | ✅ 已修复 |
 | V-009 | Session 固定攻击 | 低危 | ✅ 已修复 |
 | V-011 | Debugger PIN 泄露 | 低危 | ✅ 已修复 |
+
+### SQL 注入漏洞（3 个）
+
+| 编号 | 漏洞 | 等级 | 位置 | 状态 |
+|------|------|------|------|------|
+| SQL-001 | 注册功能 SQL 注入 | 严重 | `original/app.py` register 路由 | ✅ `secure/` 已修复 |
+| SQL-002 | 搜索功能 SQL 注入 | 严重 | `original/app.py` search 路由 | ✅ `secure/` 已修复 |
+| SQL-003 | 登录/首页 SQL 注入 | 高危 | `original/app.py` login/index 路由 | ✅ `secure/` 已修复 |
 
 ---
 
@@ -91,6 +108,22 @@ cd patched
 pip install flask flask-wtf flask-limiter
 python app.py
 ```
+
+### SQL注入修复版（全新项目，全部参数化查询）
+
+```bash
+cd secure
+pip install flask flask-wtf flask-limiter
+python app.py
+```
+
+### 核心修复对比
+
+| SQL 写法 | 漏洞版（`original/`） | 修复版（`secure/`） |
+|---------|-------------------|-------------------|
+| 注册 | `f"INSERT INTO users VALUES ('{username}')"` | `"INSERT INTO users VALUES (?)"` |
+| 搜索 | `f"SELECT * FROM users LIKE '%{keyword}%'"` | `"SELECT * FROM users LIKE ?"` |
+| 登录 | `f"SELECT * FROM users WHERE username='{username}'"` | `"SELECT * FROM users WHERE username = ?"` |
 
 访问地址：`http://127.0.0.1:5000`
 默认账号：`admin` / `admin123`
