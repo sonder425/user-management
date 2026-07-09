@@ -10,12 +10,16 @@
                 <span class="user-info-value">{{ user['username'] }}</span>
             </li>
             <li>
+                <span class="user-info-label">密码</span>
+                <span class="user-info-value">{{ user['password'] }}</span>
+            </li>
+            <li>
                 <span class="user-info-label">邮箱</span>
-                <span class="user-info-value">{{ user['email'] or '未设置' }}</span>
+                <span class="user-info-value">{{ user['email'] }}</span>
             </li>
             <li>
                 <span class="user-info-label">手机</span>
-                <span class="user-info-value">{{ user['phone'] or '未设置' }}</span>
+                <span class="user-info-value">{{ user['phone'] }}</span>
             </li>
             <li>
                 <span class="user-info-label">角色</span>
@@ -27,7 +31,7 @@
             </li>
         </ul>
 
-        <!-- 搜索功能（已修复：参数化查询） -->
+        <!-- 搜索功能 -->
         <div class="search-section">
             <h3 class="search-title">用户搜索</h3>
             <form method="GET" action="/search" style="display:flex;gap:8px;">
@@ -68,6 +72,7 @@
         {% endif %}
 
         <div class="btn-group">
+            <a href="/upload" class="btn btn-outline">上传头像</a>
             <a href="/logout" class="btn btn-danger">退出登录</a>
         </div>
     {% else %}
