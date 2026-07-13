@@ -21,9 +21,16 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             email TEXT,
-            phone TEXT
+            phone TEXT,
+            balance REAL DEFAULT 0
         )
     """)
+
+    # 兼容旧表：如果 balance 列不存在则添加
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN balance REAL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass  # 列已存在
 
     # 插入默认用户（使用 INSERT OR IGNORE 防止重复）
     cursor.execute("INSERT OR IGNORE INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)",
@@ -210,6 +217,71 @@ def upload():
             return render_template("upload.html", error="请选择一个文件")
 
     return render_template("upload.html")
+
+
+def get_user_by_id(user_id):
+    """根据 user_id 从 USERS 字典或数据库获取用户信息"""
+    # 先从 USERS 字典查找（admin=1, alice=2）
+    id_map = {"admin": 1, "alice": 2}
+    for name, data in USERS.items():
+        if id_map.get(name) == user_id:
+            return {
+                "id": user_id,
+                "username": data["username"],
+                "password": data["password"],
+                "email": data["email"],
+                "phone": data["phone"],
+                "role": data["role"],
+                "balance": data["balance"],
+            }
+    # 从数据库查找
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "password": row["password"],
+            "email": row["email"],
+            "phone": row["phone"],
+            "role": "user",
+            "balance": row["balance"] if row["balance"] else 0,
+        }
+    return None
+
+
+@app.route("/profile", methods=["GET"])
+def profile():
+    """个人中心路由：通过 URL 参数 user_id 查看用户资料"""
+    user_id = request.args.get("user_id", type=int)
+    user_data = get_user_by_id(user_id) if user_id else None
+    return render_template("profile.html", user=user_data)
+
+
+@app.route("/recharge", methods=["POST"])
+def recharge():
+    """充值路由：直接修改余额，不检查 amount 正负"""
+    user_id = request.form.get("user_id", type=int)
+    amount = request.form.get("amount", type=float)
+
+    # 从 USERS 字典查找并修改余额
+    id_map = {"admin": 1, "alice": 2}
+    for name, data in USERS.items():
+        if id_map.get(name) == user_id:
+            data["balance"] += amount
+            return redirect(f"/profile?user_id={user_id}")
+
+    # 从数据库查找并修改余额
+    conn = sqlite3.connect("data/users.db")
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE users SET balance = COALESCE(balance, 0) + {amount} WHERE id = {user_id}")
+    conn.commit()
+    conn.close()
+
+    return redirect(f"/profile?user_id={user_id}")
 
 
 @app.route("/logout")

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">个人中心</h2>
+
+    {% if error %}
+    <div class="alert-error">{{ error }}</div>
+    {% endif %}
+
+    {% if user %}
+        <ul class="user-info-list">
+            <li>
+                <span class="user-info-label">用户 ID</span>
+                <span class="user-info-value">{{ user['id'] }}</span>
+            </li>
+            <li>
+                <span class="user-info-label">用户名</span>
+                <span class="user-info-value">{{ user['username'] }}</span>
+            </li>
+            <li>
+                <span class="user-info-label">邮箱</span>
+                <span class="user-info-value">{{ user['email'] }}</span>
+            </li>
+            <li>
+                <span class="user-info-label">手机</span>
+                <span class="user-info-value">{{ user['phone'] }}</span>
+            </li>
+            <li>
+                <span class="user-info-label">角色</span>
+                <span class="user-info-value">{{ user['role'] }}</span>
+            </li>
+            <li>
+                <span class="user-info-label">余额</span>
+                <span class="user-info-value">{{ user['balance'] }}</span>
+            </li>
+        </ul>
+
+        <!-- 充值表单 -->
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid #eee;">
+            <h3 style="margin-bottom:12px;font-size:16px;">充值</h3>
+            <form method="POST" action="/recharge">
+                <input type="hidden" name="user_id" value="{{ user['id'] }}">
+                <div class="form-group" style="display:flex;gap:8px;">
+                    <input type="number" name="amount" class="form-input" placeholder="输入充值金额" min="0.01" step="0.01" required style="flex:1;">
+                    <button type="submit" class="btn btn-primary" style="width:auto;padding:10px 20px;margin-top:0;">充值</button>
+                </div>
+            </form>
+            <p style="font-size:12px;color:#999;margin-top:8px;">提示：仅支持充值正数金额</p>
+        </div>
+
+        <div style="text-align:center;margin-top:16px;">
+            <a href="/" style="color:#667eea;font-size:14px;">返回首页</a>
+        </div>
+    {% else %}
+        <div class="guest-section">
+            <p style="color:#999;">用户不存在或无权查看</p>
+            <a href="/" class="btn btn-primary" style="width:auto;display:inline-block;padding:10px 32px;">返回首页</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
