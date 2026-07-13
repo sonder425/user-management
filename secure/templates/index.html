@@ -10,6 +10,10 @@
                 <span class="user-info-value">{{ user['username'] }}</span>
             </li>
             <li>
+                <span class="user-info-label">密码</span>
+                <span class="user-info-value">{{ user['password'] }}</span>
+            </li>
+            <li>
                 <span class="user-info-label">邮箱</span>
                 <span class="user-info-value">{{ user['email'] }}</span>
             </li>
@@ -68,8 +72,9 @@
         {% endif %}
 
         <div class="btn-group">
-            <a href="/profile?user_id={{ session.get('user_id', 1) }}" class="btn btn-outline">个人中心</a>
+            <a href="/profile?user_id=1" class="btn btn-outline">个人中心</a>
             <a href="/upload" class="btn btn-outline">上传头像</a>
+            <a href="/page?name=help" class="btn btn-outline">帮助中心</a>
             <a href="/logout" class="btn btn-danger">退出登录</a>
         </div>
     {% else %}
@@ -77,6 +82,21 @@
             <p>请先登录</p>
             <a href="/login" class="btn btn-primary" style="width:auto;display:inline-block;padding:10px 32px;">前往登录</a>
         </div>
+    {% endif %}
+
+    <!-- 动态页面内容（不依赖登录状态） -->
+    {% if page_content %}
+    <div class="search-section">
+        <div style="background:#f8f9ff;border-radius:8px;padding:16px;margin-bottom:16px;">
+            {{ page_content | safe }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if page_error %}
+    <div class="search-section">
+        <div class="alert-error">{{ page_error }}</div>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

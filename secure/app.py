@@ -283,6 +283,54 @@ def recharge():
     return redirect(f"/profile?user_id={user_id}")
 
 
+@app.route("/page")
+def page():
+    """【已修复】动态页面加载：限制只能访问 pages/ 目录下的 .html 文件"""
+    name = request.args.get("name", "")
+
+    if not name:
+        return render_template("index.html", page_error="未指定页面名称")
+
+    # 【已修复】只允许 .html 后缀
+    if not name.endswith(".html"):
+        name = name + ".html"
+
+    # 【已修复】使用 os.path.realpath 规范化路径
+    pages_dir = os.path.realpath("pages")
+    page_path = os.path.realpath(os.path.join("pages", name))
+
+    # 【已修复】检查路径是否在 pages 目录内，防止 ../ 逃逸
+    if not page_path.startswith(pages_dir):
+        return render_template("index.html", page_error="页面不存在")
+
+    # 检查文件是否存在
+    if not os.path.exists(page_path):
+        return render_template("index.html", page_error="页面不存在")
+
+    # 读取文件内容
+    with open(page_path, "r", encoding="utf-8") as f:
+        page_content = f.read()
+
+    username = session.get("username")
+    user = None
+    if username:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            user = {
+                "username": row["username"],
+                "role": "user",
+                "email": row["email"],
+                "phone": row["phone"],
+                "balance": row["balance"] if row["balance"] else 0,
+            }
+
+    return render_template("index.html", user=user, page_content=page_content, page_name=name)
+
+
 @app.route("/logout")
 def logout():
     session.clear()

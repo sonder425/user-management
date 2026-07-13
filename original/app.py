@@ -291,5 +291,47 @@ def logout():
     return redirect("/")
 
 
+@app.route("/page")
+def page():
+    """动态页面加载：通过 name 参数拼接路径读取文件（故意不做路径校验）"""
+    name = request.args.get("name", "")
+
+    if not name:
+        return render_template("index.html", page_error="未指定页面名称")
+
+    # 使用拼接字符串的方式构建文件路径（故意不校验 ../ ）
+    page_path = os.path.join("pages", name)
+
+    # 如果文件不存在，尝试加上 .html 后缀
+    if not os.path.exists(page_path):
+        page_path = os.path.join("pages", name + ".html")
+
+    # 尝试读取文件内容
+    if os.path.exists(page_path):
+        with open(page_path, "r", encoding="utf-8") as f:
+            page_content = f.read()
+        # 从 session 获取用户信息传递给模板
+        username = session.get("username")
+        user = USERS.get(username)
+        if username and not user:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT * FROM users WHERE username='{username}'")
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                user = {
+                    "username": row["username"],
+                    "password": row["password"],
+                    "email": row["email"],
+                    "phone": row["phone"],
+                    "role": "user",
+                    "balance": 0,
+                }
+        return render_template("index.html", user=user, page_content=page_content, page_name=name)
+    else:
+        return render_template("index.html", page_error="页面不存在")
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
