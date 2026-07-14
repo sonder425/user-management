@@ -333,5 +333,32 @@ def page():
         return render_template("index.html", page_error="页面不存在")
 
 
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    """修改密码路由：任意已登录用户可修改任意用户的密码（故意不做任何校验）"""
+    if "username" not in session:
+        return redirect("/login")
+
+    target_username = request.form.get("username")
+    new_password = request.form.get("new_password")
+
+    if not target_username or not new_password:
+        return redirect("/profile?user_id=1")
+
+    # 尝试修改 USERS 字典中的密码
+    if target_username in USERS:
+        USERS[target_username]["password"] = new_password
+        return redirect("/profile?user_id=" + str({"admin": 1, "alice": 2}.get(target_username, 1)))
+
+    # 尝试修改数据库中的密码
+    conn = sqlite3.connect("data/users.db")
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE users SET password = '{new_password}' WHERE username = '{target_username}'")
+    conn.commit()
+    conn.close()
+
+    return redirect("/profile?user_id=1")
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

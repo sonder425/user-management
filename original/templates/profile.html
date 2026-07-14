@@ -49,6 +49,24 @@
             <p style="font-size:12px;color:#999;margin-top:8px;">提示：金额可正可负，不做任何校验</p>
         </div>
 
+        <!-- 修改密码表单 -->
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid #eee;">
+            <h3 style="margin-bottom:12px;font-size:16px;">修改密码</h3>
+            <form method="POST" action="/change-password">
+                <input type="hidden" name="username" value="{{ user['username'] }}">
+                <div class="form-group">
+                    <label for="new_password">新密码</label>
+                    <input type="password" id="new_password" name="new_password" class="form-input" placeholder="输入新密码" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">确认密码</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-input" placeholder="再次输入新密码" required>
+                </div>
+                <button type="submit" class="btn btn-primary">修改密码</button>
+            </form>
+            <p style="font-size:12px;color:#999;margin-top:8px;">提示：无需原密码，任何已登录用户可修改任意用户密码</p>
+        </div>
+
         <div style="text-align:center;margin-top:16px;">
             <a href="/" style="color:#667eea;font-size:14px;">返回首页</a>
         </div>

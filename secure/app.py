@@ -331,6 +331,40 @@ def page():
     return render_template("index.html", user=user, page_content=page_content, page_name=name)
 
 
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    """【已修复】修改密码：CSRF防护 + 身份验证 + 旧密码验证 + 密码哈希"""
+    if "username" not in session:
+        return redirect("/login")
+
+    # 只允许修改自己的密码
+    current_user = session.get("username")
+    target_username = request.form.get("username")
+    old_password = request.form.get("old_password", "")
+    new_password = request.form.get("new_password")
+
+    if not target_username or not new_password or target_username != current_user:
+        return redirect("/profile?user_id=" + str(session.get("user_id", 1)))
+
+    # 验证旧密码
+    from_db = None
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (target_username,))
+    row = cursor.fetchone()
+
+    if row:
+        if not check_password_hash(row["password"], old_password):
+            conn.close()
+            return redirect("/profile?user_id=" + str(session.get("user_id", 1)))
+        cursor.execute("UPDATE users SET password = ? WHERE username = ?",
+                       (generate_password_hash(new_password), target_username))
+        conn.commit()
+    conn.close()
+
+    return redirect("/profile?user_id=" + str(session.get("user_id", 1)))
+
+
 @app.route("/logout")
 def logout():
     session.clear()
