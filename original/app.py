@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 import os
+import urllib.request
+import urllib.error
 
 app = Flask(__name__)
 app.secret_key = "dev-key-2025"
@@ -358,6 +360,49 @@ def change_password():
     conn.close()
 
     return redirect("/profile?user_id=1")
+
+
+@app.route("/fetch-url", methods=["POST"])
+def fetch_url():
+    """URL 抓取路由：直接访问用户提交的 URL（故意不做任何限制，SSRF 漏洞）"""
+    if "username" not in session:
+        return redirect("/login")
+
+    url = request.form.get("url", "")
+    if not url:
+        return render_template("index.html", fetch_error="请输入 URL")
+
+    try:
+        # 直接使用 urllib 访问用户提交的 URL，不做任何限制
+        response = urllib.request.urlopen(url, timeout=10)
+        status_code = response.getcode()
+        content = response.read().decode("utf-8", errors="ignore")[:5000]
+        response.close()
+
+        # 获取用户信息传给模板
+        username = session.get("username")
+        user = USERS.get(username)
+        if username and not user:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT * FROM users WHERE username='{username}'")
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                user = {
+                    "username": row["username"],
+                    "password": row["password"],
+                    "email": row["email"],
+                    "phone": row["phone"],
+                    "role": "user",
+                    "balance": 0,
+                }
+
+        return render_template("index.html", user=user,
+                               fetch_status=status_code, fetch_content=content, fetch_url=url)
+
+    except Exception as e:
+        return render_template("index.html", fetch_error=f"抓取失败: {e}")
 
 
 if __name__ == "__main__":

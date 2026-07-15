@@ -11,10 +11,16 @@
   7. IDOR 越权漏洞修复：个人中心只能查看自己的资料
   8. 充值金额校验：amount 必须为正数
   9. 密码不在个人中心页面显示
+ 10. SSRF 防护：限制 URL 协议为 http/https，禁止内网 IP
 """
 import os
 import uuid
 import sqlite3
+import re
+import socket
+import urllib.request
+import urllib.error
+import urllib.parse
 from datetime import timedelta
 
 from flask import Flask, render_template, request, redirect, session, url_for, abort
@@ -363,6 +369,63 @@ def change_password():
     conn.close()
 
     return redirect("/profile?user_id=" + str(session.get("user_id", 1)))
+
+
+def is_internal_ip(hostname):
+    """检查目标 IP 是否为内网地址，防止 SSRF"""
+    try:
+        ip = socket.gethostbyname(hostname)
+        # 检查私有 IP 地址段
+        private_ranges = [
+            "127.", "10.", "192.168.",
+            "169.254.", "0.",
+        ]
+        # 172.16.0.0 - 172.31.255.255
+        if ip.startswith("172."):
+            parts = ip.split(".")
+            if len(parts) == 4 and 16 <= int(parts[1]) <= 31:
+                return True
+        for prefix in private_ranges:
+            if ip.startswith(prefix):
+                return True
+        return False
+    except Exception:
+        return True  # 解析失败时拒绝访问
+
+
+@app.route("/fetch-url", methods=["POST"])
+def fetch_url():
+    """【已修复】URL 抓取：限制协议、禁止内网、禁止 file://"""
+    if "username" not in session:
+        return redirect("/login")
+
+    url = request.form.get("url", "")
+    if not url:
+        return render_template("index.html", fetch_error="请输入 URL")
+
+    # 限制只允许 http/https 协议
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return render_template("index.html", fetch_error="不支持的协议类型")
+
+    # 禁止访问内网地址（SSRF 防护）
+    hostname = parsed.hostname
+    if not hostname or is_internal_ip(hostname):
+        return render_template("index.html", fetch_error="不允许访问内网地址")
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        response = urllib.request.urlopen(req, timeout=10)
+        status_code = response.getcode()
+        content = response.read().decode("utf-8", errors="ignore")[:5000]
+        response.close()
+
+        username = session.get("username")
+        user = get_safe_user(username)
+        return render_template("index.html", user=user,
+                               fetch_status=status_code, fetch_content=content, fetch_url=url)
+    except Exception as e:
+        return render_template("index.html", fetch_error=f"抓取失败: {e}")
 
 
 @app.route("/logout")
