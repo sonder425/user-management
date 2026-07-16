@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h2 class="card-title">Ping 网络诊断</h2>
+
+    <form method="POST" action="/ping">
+        <div class="form-group" style="display:flex;gap:8px;">
+            <input type="text" name="ip" class="form-input" placeholder="输入 IP 地址或域名" value="{{ ip or '' }}" required style="flex:1;">
+            <button type="submit" class="btn btn-primary" style="width:auto;padding:10px 20px;margin-top:0;">Ping</button>
+        </div>
+    </form>
+
+    {% if result %}
+    <div style="margin-top:20px;">
+        <pre style="background:#000;color:#00ff00;padding:16px;border-radius:6px;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;overflow:auto;max-height:500px;white-space:pre-wrap;">{{ result }}</pre>
+    </div>
+    {% endif %}
+
+    <div style="text-align:center;margin-top:16px;">
+        <a href="/" style="color:#667eea;font-size:14px;">返回首页</a>
+    </div>
+</div>
+{% endblock %}

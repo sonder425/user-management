@@ -21,6 +21,8 @@ import socket
 import urllib.request
 import urllib.error
 import urllib.parse
+import subprocess
+import platform
 from datetime import timedelta
 
 from flask import Flask, render_template, request, redirect, session, url_for, abort
@@ -426,6 +428,41 @@ def fetch_url():
                                fetch_status=status_code, fetch_content=content, fetch_url=url)
     except Exception as e:
         return render_template("index.html", fetch_error=f"抓取失败: {e}")
+
+
+@app.route("/ping", methods=["GET", "POST"])
+def ping():
+    """【已修复】Ping 网络诊断：使用参数列表而非 shell=True，防止命令注入"""
+    if "username" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        ip = request.form.get("ip", "")
+
+        # 【已修复】使用参数列表而非 f-string 拼接，防止命令注入
+        # 只允许 IP 地址和域名（字母数字.-）
+        import re as _re
+        if not _re.match(r'^[a-zA-Z0-9\.\-]+$', ip):
+            return render_template("ping.html", result="错误：只允许输入 IP 地址或域名", ip=ip)
+
+        try:
+            # 【已修复】使用参数列表，shell=False（默认），防止命令注入
+            output = subprocess.check_output(
+                ["ping", "-c", "3", ip],
+                timeout=30,
+                stderr=subprocess.STDOUT,
+            )
+            result = output.decode("utf-8", errors="ignore")
+        except subprocess.CalledProcessError as e:
+            result = f"命令执行失败 (返回码: {e.returncode})\n{e.output.decode('utf-8', errors='ignore')}"
+        except subprocess.TimeoutExpired:
+            result = "命令执行超时"
+        except Exception as e:
+            result = f"执行错误: {e}"
+
+        return render_template("ping.html", result=result, ip=ip)
+
+    return render_template("ping.html")
 
 
 @app.route("/logout")
