@@ -23,6 +23,9 @@ import urllib.error
 import urllib.parse
 import subprocess
 import platform
+import re
+import json
+import xml.etree.ElementTree as ET
 from datetime import timedelta
 
 from flask import Flask, render_template, request, redirect, session, url_for, abort
@@ -463,6 +466,50 @@ def ping():
         return render_template("ping.html", result=result, ip=ip)
 
     return render_template("ping.html")
+
+
+@app.route("/xml-import", methods=["GET", "POST"])
+def xml_import():
+    """【已修复】XML 数据导入：禁用外部实体解析，防止 XXE 攻击"""
+    if "username" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        xml_data = request.form.get("xml_data", "")
+
+        if not xml_data.strip():
+            return render_template("xml_import.html", result=json.dumps({"error": "请输入 XML 数据"}, ensure_ascii=False, indent=2))
+
+        try:
+            # 【已修复】创建解析器时禁用外部实体解析
+            parser = ET.XMLParser()
+            parser.parser.EntityResolver = lambda *a: None  # type: ignore
+            # 【已修复】禁止 DTD 加载外部资源
+            parser.parser.setFeature(ET.XMLParser.feature_external_ges, False)  # type: ignore
+            parser.parser.setFeature(ET.XMLParser.feature_external_pes, False)  # type: ignore
+
+            root = ET.fromstring(xml_data, parser)
+            users = []
+            for user_elem in root.findall(".//user"):
+                name = user_elem.findtext("name", "")
+                email = user_elem.findtext("email", "")
+                users.append({"name": name, "email": email})
+
+            result = {
+                "status": "success",
+                "users_count": len(users),
+                "users": users,
+            }
+            return render_template("xml_import.html", result=json.dumps(result, ensure_ascii=False, indent=2))
+
+        except Exception as e:
+            error_msg = str(e)
+            # 不暴露敏感错误信息
+            if "cannot decode" in error_msg.lower() or "invalid" in error_msg.lower():
+                error_msg = "XML 格式错误"
+            return render_template("xml_import.html", result=json.dumps({"error": f"XML 解析失败: {error_msg}"}, ensure_ascii=False, indent=2))
+
+    return render_template("xml_import.html")
 
 
 @app.route("/logout")

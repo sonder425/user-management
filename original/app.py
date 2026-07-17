@@ -5,6 +5,9 @@ import urllib.request
 import urllib.error
 import subprocess
 import platform
+import re
+import json
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 app.secret_key = "dev-key-2025"
@@ -434,6 +437,59 @@ def ping():
         return render_template("ping.html", result=result, ip=ip)
 
     return render_template("ping.html")
+
+
+@app.route("/xml-import", methods=["GET", "POST"])
+def xml_import():
+    """XML 数据导入路由：解析 XML，支持 XXE（故意不做安全防护）"""
+    if "username" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        xml_data = request.form.get("xml_data", "")
+
+        if not xml_data.strip():
+            return render_template("xml_import.html", result=json.dumps({"error": "请输入 XML 数据"}, ensure_ascii=False, indent=2))
+
+        # 检查 XML 中是否有 <!ENTITY 定义，提取 SYSTEM 文件路径
+        entity_pattern = re.compile(r'<!ENTITY\s+\S+\s+SYSTEM\s+"([^"]+)"')
+        matches = entity_pattern.findall(xml_data)
+
+        file_contents = {}
+        for filepath in matches:
+            # 去掉 file:// 前缀，使其可以用 open() 读取
+            actual_path = re.sub(r'^file://', '', filepath)
+            try:
+                with open(actual_path, "r", encoding="utf-8") as f:
+                    file_contents[filepath] = f.read()
+            except Exception as e:
+                file_contents[filepath] = f"[读取失败: {e}]"
+
+        # 替换实体引用 &xxe; 为文件内容
+        for filepath, content in file_contents.items():
+            xml_data = xml_data.replace("&xxe;", content)
+
+        try:
+            # 解析 XML
+            root = ET.fromstring(xml_data)
+            users = []
+            for user_elem in root.findall(".//user"):
+                name = user_elem.findtext("name", "")
+                email = user_elem.findtext("email", "")
+                users.append({"name": name, "email": email})
+
+            result = {
+                "status": "success",
+                "users_count": len(users),
+                "users": users,
+                "files_read": list(file_contents.keys()),
+            }
+            return render_template("xml_import.html", result=json.dumps(result, ensure_ascii=False, indent=2))
+
+        except Exception as e:
+            return render_template("xml_import.html", result=json.dumps({"error": f"XML 解析失败: {e}", "files_read": list(file_contents.keys())}, ensure_ascii=False, indent=2))
+
+    return render_template("xml_import.html")
 
 
 if __name__ == "__main__":
